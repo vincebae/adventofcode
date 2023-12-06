@@ -3,7 +3,6 @@
 (require '[clojure.string :as s])
 
 (def ^:private CUBES [:red :blue :green])
-(def ^:private TOTAL-CUBES {:red 12 :green 13 :blue 14})
 (def ^:private LINE-REGEX #"Game ([0-9]+): (.*)")
 
 (defn- parse-set
@@ -24,9 +23,15 @@
          (map parse-set)
          (hash-map :id (Integer/parseInt id) :game))))
 
-(defn- possible-game?
+(defn- max-cube
+  [game cube]
+  (->> (map #(get % cube 0) game)
+       (apply max)))
+
+(defn- power
   [game]
-  (every? #(<= (get game % 0) (TOTAL-CUBES %)) CUBES))
+  (->> (map #(max-cube game %) CUBES)
+       (apply *)))
 
 (defn- read-text
   [args]
@@ -38,8 +43,8 @@
        (s/split-lines)
        (sequence
         (comp (map parse-game)
-              (filter #(every? possible-game? (:game %)))
-              (map :id)))
+              (map :game)
+              (map power)))
        (apply +)
        (println "answer:")))
 
